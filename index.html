@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="bootstrap.min.css">
+    <title>Digital File Signing</title>
+    <style>
+        body {
+            background: url(nebula.jpg) no-repeat center center fixed; 
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+        }
+        html {
+            font-size: 14px;
+        }
+        @media (min-width: 768px) {
+        html {
+            font-size: 16px;
+        }
+        }
+
+        .container {
+            max-width: 960px;
+        }
+
+        .pricing-header {
+            max-width: 700px;
+        }
+
+        .card-deck .card {
+            min-width: 220px;
+        }
+
+        canvas {
+            display: block;
+            vertical-align: bottom;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+<div id="particles-js"></div>
+<div class="twinkling"></div>
+
+<div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+    <h1 class="display-4 text-light">JWT Digital File Signing</h1>
+    <p class="lead text-light">
+        An Online File Signing.<br>
+        to make sure your file not corrupt or tampered<br>
+        Using Json Web Token to validate
+    </p>
+</div>
+
+<div class="container">
+    <div class="card-deck mb-3 text-center">
+        <div class="card mb-4 shadow-sm text-light bg-dark">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Validation</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li><b>Requirements</b></li>
+                    <li>jwt.sign.file</li>
+                    <li>file to verify</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <a href="validate.html" class="btn btn-lg btn-block btn-secondary">Verify</a>
+            </div>
+        </div>
+        <div class="card mb-4 shadow-sm text-light bg-dark">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Create KEY for signing</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li><b>This will create</b></li>
+                    <li>RSA Key Pair</li>
+                    <li>2048 bits</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <a href="create.html" class="btn btn-lg btn-block btn-secondary">Create</a>
+            </div>
+        </div>
+        <div class="card mb-4 shadow-sm text-light bg-dark">
+            <div class="card-header">
+                <h4 class="my-0 font-weight-normal">Sign a File</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mt-3 mb-4">
+                    <li><b>Requirements</b></li>
+                    <li>RSA Private key</li>
+                    <li>RSA Public key</li>
+                    <li>File to sign</li>
+                </ul>
+            </div>
+            <div class="card-footer">
+                <a href="sign.html" class="btn btn-lg btn-block btn-secondary">Sign</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="pt-4 my-md-5 pt-md-5 border-top">
+        <div class="row">
+            <div class="col-12 col-md">
+                <img class="mb-2" src="//twitter.erdioo.net/avatar/ibnux/small.jpg" alt="" width="24" height="24">
+                <small class="d-block mb-3 text-light">Created by iBNuX<br>
+                </small>
+            </div>
+        <div class="col-6 col-md">
+            <h5 class="text-light">Libraries</h5>
+            <ul class="list-unstyled text-small">
+            <li><a class="text-light" target="_blank" href="https://code.google.com/p/crypto-js/wiki/License">Cryto JS</a></li>
+            <li><a class="text-light" target="_blank" href="https://github.com/wwwtyro/cryptico">Cryptico</a></li>
+            <li><a class="text-light" target="_blank" href="https://github.com/kjur/jsrsasign">RSA-Sign JavaScript Library</a></li>
+            <li><a class="text-light" target="_blank" href="https://getbootstrap.com">Bootstrap</a></li>
+            <li><a class="text-light" target="_blank" href="https://jquery.org">Jquery</a></li>
+            </ul>
+        </div>
+        <div class="col-6 col-md">
+            <h5 class="text-light">Project</h5>
+            <ul class="list-unstyled text-small">
+            <li><a class="text-light" href="https://github.com/ibnux/file-sign/">PHP File Sign Library</a></li>
+            <li><a class="text-light" href="https://github.com/ibnux/jwt-filesign">JWT File Signing</a></li>
+            </ul>
+        </div>
+        <div class="col-6 col-md">
+            <h5 class="text-light">Team</h5>
+            <ul class="list-unstyled text-small">
+            <li><a class="text-light" href="https://github.com/ibnux/">iBNuX</a></li>
+            </ul>
+        </div>
+        </div>
+    </footer>
+</div>
+<script src="js/particles.min.js"></script>
+<script src="js/particles.js"></script>
+</body>
+</html>

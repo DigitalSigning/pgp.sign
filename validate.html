@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Digital File Signing Validation</title>
+
+    <style>
+        body {
+            background: url(nebula.jpg) no-repeat center center fixed;
+            -webkit-background-size: cover;
+            -moz-background-size: cover;
+            -o-background-size: cover;
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+        <h1 class="display-4 text-light">Digital File Signing Validation</h1>
+        <p class="lead text-light">
+            Use this form to validate JWT File Signing
+        </p>
+    </div>
+    <div class="card" id="card">
+        <div class="card-header bg-info text-white"><h4>Choose File</h4></div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Document</label>
+                <input type="file" class="form-control" id="file_doc">
+            </div>
+            <div class="form-group">
+                <label>.jwt.sign</label>
+                <input type="file" class="form-control" id="file_jwt_sign">
+            </div>
+        </div>
+        <div class="card-body">
+            <button class="btn btn-block btn-info" onclick="process()">Validate</button>
+        </div>
+        <ul class="list-group" id="hash_result">
+        </ul>
+    </div>
+    <div class="card-footer">
+        <a class="btn btn-block btn-secondary" href="/">back</a>
+    </div>
+    <br><center><small class="text-white">Created by iBNuX</small></center><br>
+</div>
+<script src="js/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="js/crypto.js"></script>
+<script src="js/md5.js"></script>
+<script src="js/sha1.js"></script>
+<script src="js/sha256.js"></script>
+<!-- https://github.com/kjur/jsrsasign/wiki/Tutorial-for-JWT-verification -->
+<script src="js/jsrsasign-latest-all-min.js"></script>
+<script>
+var md5Hex;
+var sha256Hex;
+var sha1Hex;
+
+function process() {
+    getHash(
+        document.getElementById("file_doc").files[0],
+        prog => console.log("Progress: " + prog)
+    );
+}
+
+function readChunked(file, chunkCallback, endCallback) {
+    var fileSize   = file.size;
+    var chunkSize  = 4 * 1024 * 1024; // 4MB
+    var offset     = 0;
+    var reader = new FileReader();
+    reader.onload = function() {
+        if (reader.error) {
+        endCallback(reader.error || {});
+        return;
+        }
+        offset += reader.result.length;
+        // callback for handling read chunk
+        // TODO: handle errors
+        chunkCallback(reader.result, offset, fileSize);
+        if (offset >= fileSize) {
+            endCallback(null);
+            return;
+        }
+        readNext();
+    };
+
+    reader.onerror = function(err) {
+        endCallback(err || {});
+    };
+
+    function readNext() {
+        var fileSlice = file.slice(offset, offset + chunkSize);
+        reader.readAsBinaryString(fileSlice);
+    }
+    readNext();
+}
+
+function getHash(blob, cbProgress) {
+    return new Promise((resolve, reject) => {
+        var md5 = CryptoJS.algo.MD5.create();
+        var sha256 = CryptoJS.algo.SHA256.create();
+        var sha1 = CryptoJS.algo.SHA1.create();
+        readChunked(blob, (chunk, offs, total) => {
+            md5.update(CryptoJS.enc.Latin1.parse(chunk));
+            sha256.update(CryptoJS.enc.Latin1.parse(chunk));
+            sha1.update(CryptoJS.enc.Latin1.parse(chunk));
+            if (cbProgress) {
+                cbProgress(offs / total);
+            }
+        }, err => {
+            if (err) {
+                reject(err);
+            } else {
+                md5Hex =  md5.finalize().toString(CryptoJS.enc.Hex);
+                sha256Hex =  sha256.finalize().toString(CryptoJS.enc.Hex);
+                sha1Hex =  sha1.finalize().toString(CryptoJS.enc.Hex);
+                $('#hash_result').empty();
+                $('#hash_result').append('<li class="list-group-item d-flex justify-content-between align-items-center"><div id="sha256" style="overflow: scroll;">'+sha256Hex+'</div><span class="badge badge-primary badge-pill">SHA256</span></li>');
+                $('#hash_result').append('<li class="list-group-item d-flex justify-content-between align-items-center"><div id="sha1" style="overflow: scroll;">'+sha1Hex+'</div><span class="badge badge-primary badge-pill">SHA1</span></li>');
+                $('#hash_result').append('<li class="list-group-item d-flex justify-content-between align-items-center"><div id="md5" style="overflow: scroll;">'+md5Hex+'</div><span class="badge badge-primary badge-pill">MD5</span></li>');
+                openJWT();
+            }
+        });
+    });
+}
+
+function b64d( str ) {
+    return decodeURIComponent(escape(window.atob( str )));
+}
+
+function openJWT(){
+    var jwtsign = $('#file_jwt_sign').prop('files')[0];
+    var fileReader = new FileReader();
+    fileReader.onload = function () {
+        var datas = fileReader.result.split("\n");
+        var result = "";
+        $.each(datas, function (line, entry) {
+            $data = entry.split(" ");
+            if(validateEmail($data[0])){
+                var jwt = $data[1];
+                var payload = JSON.parse(b64d(jwt.split('.')[1]));
+                var pubkey = KEYUTIL.getKey(payload.key);
+                var isValid = KJUR.jws.JWS.verifyJWT(jwt, pubkey, {alg: ['RS256']});
+                if(isValid)
+                    result += '<div class="card-header text-white bg-info"><b>'+$data[0]+'</b> <span class="badge badge-success badge-pill">VALID</span></div>';
+                else
+                    result += '<div class="card-header text-white bg-info"><b>'+$data[0]+'</b> <span class="badge badge-danger badge-pill">JWT INVALID</span></div>';
+                result += '<ul class="list-group">';
+                $.each(payload, function (key, val) {
+                    if(key != 'key'){
+                        if(key == 'iat'){
+                            var d = new Date(val*1000);
+                            result += '<li class="list-group-item d-flex justify-content-between align-items-center"><b style="overflow: scroll;">'+key+'</b><div style="overflow: scroll;">'+d+'</div></li>';
+                        }else if(key == 'sha1'){
+                            if(val == sha1Hex)
+                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA1">'+val+'</div><span class="badge badge-success badge-pill">SHA1 Valid</span></li>';
+                            else
+                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA1">'+val+'</div><span class="badge badge-danger badge-pill">SHA1 Invalid</span></li>';
+                        }else if(key == 'sha256'){
+                            if(val == sha256Hex)
+                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA256">'+val+'</div><span class="badge badge-success badge-pill">SHA256 Valid</span></li>';
+                            else
+                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA256">'+val+'</div><span class="badge badge-danger badge-pill">SHA256 Invalid</span></li>';
+                        }else if(key == 'md5'){
+                            if(val == md5Hex)
+                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="MD5">'+val+'</div><span class="badge badge-success badge-pill">MD5 Valid</span></li>';
+                            else
+                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="MD5">'+val+'</div><span class="badge badge-danger badge-pill">MD5 Invalid</span></li>';
+                        }else
+                            result += '<li class="list-group-item d-flex justify-content-between align-items-center"><b style="overflow: scroll;">'+key+'</b><div style="overflow: scroll;">'+val+'</div></li>';
+                    }
+                });
+                result += '</ul>';
+            }
+        });
+        $('#card').append(result);
+    };
+    fileReader.readAsText(jwtsign);
+}
+
+function validateEmail(email) {
+    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+</script>
+</body>
+</html>
