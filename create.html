@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="bootstrap.min.css">
 
     <title>Create Digital File Signing Key</title>
 
@@ -19,19 +20,199 @@
         }
     </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-        <h1 class="display-4 text-light">Key Creator forDigital File Signing</h1>
-        <p class="lead text-light">
-            Use this form to create key to Sign a File with JWT File Signing
-        </p>
-        <h1 class="display-4 text-light">Not yet created</h1>
+    <div class="container">
+        <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+            <h1 class="display-4 text-light">Key Creator for Digital File Signing</h1>
+            <p class="lead text-light">
+                Use this form to create key to Sign a File with JWT File Signing
+            </p>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card" id="card">
+                    <div class="card-header bg-info text-white">
+                        <h4>Create signkey</h4>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="form-group">
+                            <label>Full name</label>
+                            <input type="email" class="form-control" id="nama">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" class="form-control" id="email">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <small class="form-text text-muted" id="kekuatan"></small>
+                            <input type="password" class="form-control" autocomplete="off" onkeyup="validate()"
+                                id="private_key_password">
+                        </div>
+                        <div class="form-group">
+                            <label>Repeat Password</label>
+                            <input type="password" class="form-control" autocomplete="off" id="private_key_password2">
+                        </div>
+                        <small class="form-text text-muted">Never forget your password, if you lose it, you need to create new
+                            key.</small>
+                        <small class="form-text text-muted">Kata sandi harus diingat, jika lupa, maka harus buat kunci (key)
+                            lagi.</small>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-block btn-info" onclick="createKey()">Create Key</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card" id="card">
+                    <div class="card-header bg-info text-white">
+                        <h4>Signkey Result</h4>
+                    </div>
+                    <div class="card-body" id="result" style="display: block;">
+                        <div class="form-group">
+                            <label>Fingerprint</label>
+                            <input type="text" readonly class="form-control" id="fingerprint">
+                        </div>
+                        <div class="form-group">
+                            <label>Private Key</label>
+                            <textarea rows="3" class="form-control" id="private_key"></textarea>
+                            <small class="form-text" style="color: crimson;">Save and protect private key, never lost it, SIMPAN
+                                dan JAGA Private key, jangan sampai hilang.</small>
+                            <button class="btn btn-block btn-secondary" onclick="savePrivateKey()">download</button>
+                        </div>
+                        <div class="form-group">
+                            <label>Public Key</label>
+                            <textarea rows="3" class="form-control" id="public_key"></textarea>
+                            <small class="form-text" style="color: green;">PUBLIC KEY yang hanya dibagikan ke orang lain, untuk
+                                validasi.</small>
+                            <button class="btn btn-block btn-secondary" onclick="savePublicKey()">download</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="card-footer">
+            <a class="btn btn-block btn-secondary" href="./">back</a>
+        </div>
+        <br>
+        <center><small class="text-white">Created by iBNuX</small></center><br>
     </div>
-    <div class="card-footer">
-        <a class="btn btn-block btn-secondary" href="./">back</a>
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="loadingScreen" data-backdrop="static" data-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Creating keys...</h5>
+                </div>
+                <div class="modal-body">
+                    This will take some times....<br>
+                    ini akan memakan waktu beberapa puluh detik...
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+
+
+    <script src="js/jquery-3.4.1.slim.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/openpgp.min.js"></script>
+    <script src="js/function.js"></script>
+
+    <script>
+
+        function validate() {
+            $('#kekuatan').html(passwordChecker($('#private_key_password').val().trim()))
+        }
+
+        function savePublicKey() {
+            if (!form_validate()) {
+                return;
+            }
+            if ($('#public_key').val().trim().length == 0) {
+                alert('public_key empty');
+                return;
+            }
+            var emailUser = $('#email').val().trim();
+            var namaUser = $('#nama').val().trim();
+            var fingerprintUser = $('#fingerprint').val().trim();
+            var data = { signer_name: namaUser, signer_email: emailUser, fingerprint: fingerprintUser, public_key:  $('#public_key').val()};
+            saveTextAsFile(JSON.stringify(data), $('#email').val().trim() + ".public.signkey");
+        }
+
+        function savePrivateKey() {
+            if (!form_validate()) {
+                return;
+            }
+            if ($('#private_key').val().trim().length == 0) {
+                alert('private_key empty');
+                return;
+            }
+            var emailUser = $('#email').val().trim();
+            var namaUser = $('#nama').val().trim();
+            var fingerprintUser = $('#fingerprint').val().trim();
+            var data = { signer_name: namaUser, signer_email: emailUser, fingerprint: fingerprintUser, private_key:  $('#private_key').val()};
+            saveTextAsFile(JSON.stringify(data), $('#email').val().trim() + ".private.signkey");
+        }
+
+        function form_validate(){
+            if ($('#private_key_password').val().trim().length == 0) {
+                alert('Password required');
+                return false;
+            }
+            if ($('#private_key_password').val() != $('#private_key_password2').val()) {
+                alert('Password not equal');
+                return false;
+            }
+            if ($('#email').val().length == 0 || $('#email').val().trim() == '') {
+                alert('Email required ' + $('#email').val().trim());
+                return;
+            }
+            if ($('#nama').val().length == 0 || $('#nama').val().trim() == '') {
+                alert('Nama Lengkap wajib diisi ' + $('#nama').val().trim());
+                return false;
+            }
+            return true;
+        }
+
+        function createKey(){
+            if (!form_validate()) {
+                return;
+            }
+            $('#loadingScreen').modal('show');
+        }
+
+        $('#loadingScreen').on('shown.bs.modal', function (event) {
+            var passPhrase = $('#private_key_password').val().trim();
+            var emailUser = $('#email').val().trim();
+            var namaUser = $('#nama').val().trim();
+            startCreateKey(namaUser,emailUser,passPhrase).then(function(){
+                $('#loadingScreen').modal('hide');
+            });
+        })
+
+
+        async function startCreateKey(namaUser,emailUser,passPhrase) {
+            const { key, privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
+                type: 'ecc', // Type of the key
+                curve: 'curve25519', // RSA key size 3072
+                userIDs: [{ name: namaUser, email: emailUser }],
+                passphrase: passPhrase
+            });
+            console.log(key.getFingerprint());
+            $('#private_key').val(privateKeyArmored);
+            $('#public_key').val(publicKeyArmored);
+            $('#fingerprint').val(key.getFingerprint());
+        }
+    </script>
+
 
 </body>
+
 </html>
