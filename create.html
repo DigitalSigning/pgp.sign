@@ -31,7 +31,7 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-lg-6">
                 <div class="card" id="card">
                     <div class="card-header bg-info text-white">
                         <h4>Create signkey</h4>
@@ -47,6 +47,10 @@
                             <input type="email" class="form-control" id="email">
                         </div>
                         <div class="form-group">
+                            <label>Note</label>
+                            <input type="email" class="form-control" id="note">
+                        </div>
+                        <div class="form-group">
                             <label>Password</label>
                             <small class="form-text text-muted" id="kekuatan"></small>
                             <input type="password" class="form-control" autocomplete="off" onkeyup="validate()"
@@ -56,9 +60,11 @@
                             <label>Repeat Password</label>
                             <input type="password" class="form-control" autocomplete="off" id="private_key_password2">
                         </div>
-                        <small class="form-text text-muted">Never forget your password, if you lose it, you need to create new
+                        <small class="form-text text-muted">Never forget your password, if you lose it, you need to
+                            create new
                             key.</small>
-                        <small class="form-text text-muted">Kata sandi harus diingat, jika lupa, maka harus buat kunci (key)
+                        <small class="form-text text-muted">Kata sandi harus diingat, jika lupa, maka harus buat kunci
+                            (key)
                             lagi.</small>
                     </div>
                     <div class="card-body">
@@ -66,7 +72,7 @@
                     </div>
                 </div>
             </div>
-            <div class="col-md-6">
+            <div class="col-lg-6">
                 <div class="card" id="card">
                     <div class="card-header bg-info text-white">
                         <h4>Signkey Result</h4>
@@ -79,14 +85,16 @@
                         <div class="form-group">
                             <label>Private Key</label>
                             <textarea rows="3" class="form-control" id="private_key"></textarea>
-                            <small class="form-text" style="color: crimson;">Save and protect private key, never lost it, SIMPAN
+                            <small class="form-text" style="color: crimson;">Save and protect private key, never lost
+                                it, SIMPAN
                                 dan JAGA Private key, jangan sampai hilang.</small>
                             <button class="btn btn-block btn-secondary" onclick="savePrivateKey()">download</button>
                         </div>
                         <div class="form-group">
                             <label>Public Key</label>
                             <textarea rows="3" class="form-control" id="public_key"></textarea>
-                            <small class="form-text" style="color: green;">PUBLIC KEY yang hanya dibagikan ke orang lain, untuk
+                            <small class="form-text" style="color: green;">PUBLIC KEY yang hanya dibagikan ke orang
+                                lain, untuk
                                 validasi.</small>
                             <button class="btn btn-block btn-secondary" onclick="savePublicKey()">download</button>
                         </div>
@@ -113,7 +121,8 @@
                 </div>
                 <div class="modal-body">
                     This will take some times....<br>
-                    ini akan memakan waktu beberapa puluh detik...
+                    ini akan memakan waktu beberapa puluh detik...<br>
+                    <center><img src="funnycat.gif" alt="loading" class="img-fluid"></center>
                 </div>
             </div>
         </div>
@@ -132,36 +141,22 @@
         }
 
         function savePublicKey() {
-            if (!form_validate()) {
-                return;
-            }
             if ($('#public_key').val().trim().length == 0) {
                 alert('public_key empty');
                 return;
             }
-            var emailUser = $('#email').val().trim();
-            var namaUser = $('#nama').val().trim();
-            var fingerprintUser = $('#fingerprint').val().trim();
-            var data = { signer_name: namaUser, signer_email: emailUser, fingerprint: fingerprintUser, public_key:  $('#public_key').val()};
-            saveTextAsFile(JSON.stringify(data), $('#email').val().trim() + ".public.signkey");
+            saveTextAsFile($('#public_key').val(), $('#email').val().trim() + ".public.signkey");
         }
 
         function savePrivateKey() {
-            if (!form_validate()) {
-                return;
-            }
             if ($('#private_key').val().trim().length == 0) {
                 alert('private_key empty');
                 return;
             }
-            var emailUser = $('#email').val().trim();
-            var namaUser = $('#nama').val().trim();
-            var fingerprintUser = $('#fingerprint').val().trim();
-            var data = { signer_name: namaUser, signer_email: emailUser, fingerprint: fingerprintUser, private_key:  $('#private_key').val()};
-            saveTextAsFile(JSON.stringify(data), $('#email').val().trim() + ".private.signkey");
+            saveTextAsFile($('#private_key').val(), $('#email').val().trim() + ".private.signkey");
         }
 
-        function form_validate(){
+        function form_validate() {
             if ($('#private_key_password').val().trim().length == 0) {
                 alert('Password required');
                 return false;
@@ -171,17 +166,21 @@
                 return false;
             }
             if ($('#email').val().length == 0 || $('#email').val().trim() == '') {
-                alert('Email required ' + $('#email').val().trim());
+                alert('Email required ');
+                return;
+            }
+            if (!validateEmail($('#email').val().trim())) {
+                alert('Email invalid');
                 return;
             }
             if ($('#nama').val().length == 0 || $('#nama').val().trim() == '') {
-                alert('Nama Lengkap wajib diisi ' + $('#nama').val().trim());
+                alert('Nama Lengkap wajib diisi ');
                 return false;
             }
             return true;
         }
 
-        function createKey(){
+        function createKey() {
             if (!form_validate()) {
                 return;
             }
@@ -192,23 +191,41 @@
             var passPhrase = $('#private_key_password').val().trim();
             var emailUser = $('#email').val().trim();
             var namaUser = $('#nama').val().trim();
-            startCreateKey(namaUser,emailUser,passPhrase).then(function(){
-                $('#loadingScreen').modal('hide');
+            var comment = $('#note').val().trim();
+            startCreateKey(namaUser, emailUser, comment, passPhrase).then(function () {
+
             });
         })
 
 
-        async function startCreateKey(namaUser,emailUser,passPhrase) {
-            const { key, privateKeyArmored, publicKeyArmored, revocationCertificate } = await openpgp.generateKey({
-                type: 'ecc', // Type of the key
-                curve: 'curve25519', // RSA key size 3072
-                userIDs: [{ name: namaUser, email: emailUser }],
-                passphrase: passPhrase
+        async function startCreateKey(namaUser, emailUser, comment, password) {
+            var F = kbpgp["const"].openpgp;
+
+            var opts = {
+                userid: namaUser + " ("+comment+") <" + emailUser + ">",
+                primary: {
+                    nbits: 3072,
+                    flags: F.certify_keys | F.sign_data | F.auth | F.encrypt_comm | F.encrypt_storage,
+                    expire_in: 0  // never expire
+                },
+                subkeys: []
+            };
+            kbpgp.KeyManager.generate(opts, function (err, datasign) {
+                if (!err) {
+                    datasign.sign({}, function (err) {
+                        datasign.export_pgp_private({
+                            passphrase: password
+                        }, function (err, pgp_private) {
+                            $('#private_key').val(pgp_private);
+                            datasign.export_pgp_public({}, function (err, pgp_public) {
+                                $('#public_key').val(pgp_public);
+                                $('#fingerprint').val(datasign.get_pgp_fingerprint_str());
+                                $('#loadingScreen').modal('hide');
+                            });
+                        });
+                    });
+                }
             });
-            console.log(key.getFingerprint());
-            $('#private_key').val(privateKeyArmored);
-            $('#public_key').val(publicKeyArmored);
-            $('#fingerprint').val(key.getFingerprint());
         }
     </script>
 

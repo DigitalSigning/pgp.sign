@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -18,175 +19,268 @@
         }
     </style>
 </head>
+
 <body>
-<div class="container">
-    <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
-        <h1 class="display-4 text-light">Digital File Signing Validation</h1>
-        <p class="lead text-light">
-            Use this form to validate JWT File Signing
-        </p>
-    </div>
-    <div class="card" id="card">
-        <div class="card-header bg-info text-white"><h4>Choose File</h4></div>
-        <div class="card-body">
-            <div class="form-group">
-                <label>Document</label>
-                <input type="file" class="form-control" id="file_doc">
+    <div class="container">
+        <div class="pricing-header px-3 py-3 pt-md-5 pb-md-4 mx-auto text-center">
+            <h1 class="display-4 text-light">Digital File Signing Validation</h1>
+            <p class="lead text-light">
+                Use this form to validate JSON File Signing
+            </p>
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="card" id="card">
+                    <div class="card-header bg-info text-white">
+                        <h4>Choose File</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>File to check</label>
+                            <input type="file" class="form-control" onchange="process()" id="file_to_check">
+                        </div>
+                        <div class="form-group">
+                            <label>.jsign file signature</label>
+                            <input type="file" class="form-control" accept=".jsign" id="signature_file">
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-block btn-info" onclick="prepareCheckSignature()">Validate</button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>.jwt.sign</label>
-                <input type="file" class="form-control" id="file_jwt_sign">
+            <div class="col-lg-8">
+                <div class="card" id="card">
+                    <div class="card-header bg-info text-white">
+                        <h4>Current File</h4>
+                    </div>
+                    <div class="card-body" id="file_check">
+                        <div class="form-group">
+                            <label>File name</label>
+                            <input type="text" readonly class="form-control" id="current_file_name">
+                            <small class="form-text text-muted">filename no need to be the same name</small>
+                        </div>
+                        <div class="form-group">
+                            <label>File size</label>
+                            <input type="text" readonly class="form-control" id="current_file_size">
+                        </div>
+                        <div class="form-group">
+                            <label>File type</label>
+                            <input type="text" readonly class="form-control" id="current_file_type">
+                            <small class="form-text text-muted">Some filesystem failed to detect filetype</small>
+                        </div>
+                        <div class="form-group">
+                            <label>SHA256 File</label>
+                            <input type="text" readonly class="form-control" id="current_file_hash">
+                        </div>
+                    </div>
+                    <div class="card-header bg-info text-white">
+                        <h4>Verification</h4>
+                    </div>
+                    <div class="card-body" id="sgnature_check">
+                        <div class="form-group">
+                            <label>File name</label>
+                            <input type="text" readonly class="form-control" id="file_name">
+                            <small class="form-text text-muted">filename no need to be the same name</small>
+                        </div>
+                        <div class="form-group">
+                            <label>File size</label>
+                            <input type="text" readonly class="form-control" id="file_size">
+                        </div>
+                        <div class="form-group">
+                            <label>File type</label>
+                            <input type="text" readonly class="form-control" id="file_type">
+                        </div>
+                        <div class="form-group">
+                            <label>SHA256 File</label>
+                            <input type="text" readonly class="form-control" id="file_hash">
+                        </div>
+                        <div class="form-group">
+                            <label>Fingerprint Key</label>
+                            <input type="text" readonly class="form-control" id="signer_fingerprint">
+                            <small class="form-text text-muted" id="fingerprint_info"></small>
+                        </div>
+                    </div>
+                    <div class="card-header bg-info text-white">
+                        <h4>Signed by</h4>
+                    </div>
+                    <div class="card-body" id="sgnature_check">
+                        <div class="form-group">
+                            <label>Full name</label>
+                            <input type="text" readonly class="form-control" id="signer_name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="text" readonly class="form-control" id="signer_email">
+                        </div>
+                        <div class="form-group">
+                            <label>Catatan</label>
+                            <textarea readonly class="form-control" id="signer_note" cols="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <ul class="list-group" id="hash_result">
+                </ul>
             </div>
         </div>
-        <div class="card-body">
-            <button class="btn btn-block btn-info" onclick="process()">Validate</button>
+
+        <div class="card-footer">
+            <a class="btn btn-block btn-secondary" href="./">back</a>
         </div>
-        <ul class="list-group" id="hash_result">
-        </ul>
+        <br>
+        <center><small class="text-white">Created by iBNuX</small></center><br>
     </div>
-    <div class="card-footer">
-        <a class="btn btn-block btn-secondary" href="./">back</a>
+
+    <!-- Modal -->
+    <div class="modal fade" id="loadingScreen" data-backdrop="static" data-keyboard="false" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Verify file...</h5>
+                </div>
+                <div class="modal-body">
+                    This will take some times....<br>
+                    ini akan memakan waktu beberapa detik...<br>
+                    <center><img src="funnycat.gif" alt="loading" class="img-fluid"></center>
+                </div>
+            </div>
+        </div>
     </div>
-    <br><center><small class="text-white">Created by iBNuX</small></center><br>
-</div>
-<script src="js/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
-<script src="js/crypto.js"></script>
-<script src="js/md5.js"></script>
-<script src="js/sha1.js"></script>
-<script src="js/sha256.js"></script>
-<!-- https://github.com/kjur/jsrsasign/wiki/Tutorial-for-JWT-verification -->
-<script src="js/jsrsasign-latest-all-min.js"></script>
-<script>
-var md5Hex;
-var sha256Hex;
-var sha1Hex;
+    <script src="js/jquery-3.4.1.slim.min.js"></script>
+    <script src="js/bootstrap.bundle.min.js"></script>
+    <script src="js/kbpgp-2.1.0.js"></script>
+    <script src="js/crypto.js"></script>
+    <script src="js/sha256.js"></script>
+    <script src="js/function.js"></script>
+    <script>
+        var sha256Hex;
 
-function process() {
-    getHash(
-        document.getElementById("file_doc").files[0],
-        prog => console.log("Progress: " + prog)
-    );
-}
-
-function readChunked(file, chunkCallback, endCallback) {
-    var fileSize   = file.size;
-    var chunkSize  = 4 * 1024 * 1024; // 4MB
-    var offset     = 0;
-    var reader = new FileReader();
-    reader.onload = function() {
-        if (reader.error) {
-        endCallback(reader.error || {});
-        return;
+        function process() {
+            $('#current_file_name').val('');
+            $('#current_file_size').val('');
+            $('#current_file_type').val('');
+            var file = document.getElementById("file_to_check").files[0];
+            $('#current_file_name').val(file.name);
+            $('#current_file_size').val(file.size);
+            $('#current_file_type').val(file.type);
+            getHash(
+                file,
+                prog => console.log("Progress: " + prog)
+            );
         }
-        offset += reader.result.length;
-        // callback for handling read chunk
-        // TODO: handle errors
-        chunkCallback(reader.result, offset, fileSize);
-        if (offset >= fileSize) {
-            endCallback(null);
-            return;
-        }
-        readNext();
-    };
 
-    reader.onerror = function(err) {
-        endCallback(err || {});
-    };
 
-    function readNext() {
-        var fileSlice = file.slice(offset, offset + chunkSize);
-        reader.readAsBinaryString(fileSlice);
-    }
-    readNext();
-}
-
-function getHash(blob, cbProgress) {
-    return new Promise((resolve, reject) => {
-        var md5 = CryptoJS.algo.MD5.create();
-        var sha256 = CryptoJS.algo.SHA256.create();
-        var sha1 = CryptoJS.algo.SHA1.create();
-        readChunked(blob, (chunk, offs, total) => {
-            md5.update(CryptoJS.enc.Latin1.parse(chunk));
-            sha256.update(CryptoJS.enc.Latin1.parse(chunk));
-            sha1.update(CryptoJS.enc.Latin1.parse(chunk));
-            if (cbProgress) {
-                cbProgress(offs / total);
-            }
-        }, err => {
-            if (err) {
-                reject(err);
-            } else {
-                md5Hex =  md5.finalize().toString(CryptoJS.enc.Hex);
-                sha256Hex =  sha256.finalize().toString(CryptoJS.enc.Hex);
-                sha1Hex =  sha1.finalize().toString(CryptoJS.enc.Hex);
-                $('#hash_result').empty();
-                $('#hash_result').append('<li class="list-group-item d-flex justify-content-between align-items-center"><div id="sha256" style="overflow: scroll;">'+sha256Hex+'</div><span class="badge badge-primary badge-pill">SHA256</span></li>');
-                $('#hash_result').append('<li class="list-group-item d-flex justify-content-between align-items-center"><div id="sha1" style="overflow: scroll;">'+sha1Hex+'</div><span class="badge badge-primary badge-pill">SHA1</span></li>');
-                $('#hash_result').append('<li class="list-group-item d-flex justify-content-between align-items-center"><div id="md5" style="overflow: scroll;">'+md5Hex+'</div><span class="badge badge-primary badge-pill">MD5</span></li>');
-                openJWT();
-            }
-        });
-    });
-}
-
-function b64d( str ) {
-    return decodeURIComponent(escape(window.atob( str )));
-}
-
-function openJWT(){
-    var jwtsign = $('#file_jwt_sign').prop('files')[0];
-    var fileReader = new FileReader();
-    fileReader.onload = function () {
-        var datas = fileReader.result.split("\n");
-        var result = "";
-        $.each(datas, function (line, entry) {
-            $data = entry.split(" ");
-            if(validateEmail($data[0])){
-                var jwt = $data[1];
-                var payload = JSON.parse(b64d(jwt.split('.')[1]));
-                var pubkey = KEYUTIL.getKey(payload.key);
-                var isValid = KJUR.jws.JWS.verifyJWT(jwt, pubkey, {alg: ['RS256']});
-                if(isValid)
-                    result += '<div class="card-header text-white bg-info"><b>'+$data[0]+'</b> <span class="badge badge-success badge-pill">VALID</span></div>';
-                else
-                    result += '<div class="card-header text-white bg-info"><b>'+$data[0]+'</b> <span class="badge badge-danger badge-pill">JWT INVALID</span></div>';
-                result += '<ul class="list-group">';
-                $.each(payload, function (key, val) {
-                    if(key != 'key'){
-                        if(key == 'iat'){
-                            var d = new Date(val*1000);
-                            result += '<li class="list-group-item d-flex justify-content-between align-items-center"><b style="overflow: scroll;">'+key+'</b><div style="overflow: scroll;">'+d+'</div></li>';
-                        }else if(key == 'sha1'){
-                            if(val == sha1Hex)
-                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA1">'+val+'</div><span class="badge badge-success badge-pill">SHA1 Valid</span></li>';
-                            else
-                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA1">'+val+'</div><span class="badge badge-danger badge-pill">SHA1 Invalid</span></li>';
-                        }else if(key == 'sha256'){
-                            if(val == sha256Hex)
-                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA256">'+val+'</div><span class="badge badge-success badge-pill">SHA256 Valid</span></li>';
-                            else
-                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="SHA256">'+val+'</div><span class="badge badge-danger badge-pill">SHA256 Invalid</span></li>';
-                        }else if(key == 'md5'){
-                            if(val == md5Hex)
-                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="MD5">'+val+'</div><span class="badge badge-success badge-pill">MD5 Valid</span></li>';
-                            else
-                                result += '<li class="list-group-item d-flex justify-content-between align-items-center"><div style="overflow: scroll;" title="MD5">'+val+'</div><span class="badge badge-danger badge-pill">MD5 Invalid</span></li>';
-                        }else
-                            result += '<li class="list-group-item d-flex justify-content-between align-items-center"><b style="overflow: scroll;">'+key+'</b><div style="overflow: scroll;">'+val+'</div></li>';
+        function getHash(blob, cbProgress) {
+            return new Promise((resolve, reject) => {
+                var sha256 = CryptoJS.algo.SHA256.create();
+                readChunked(blob, (chunk, offs, total) => {
+                    sha256.update(CryptoJS.enc.Latin1.parse(chunk));
+                    if (cbProgress) {
+                        cbProgress(offs / total);
+                    }
+                }, err => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        sha256Hex = sha256.finalize().toString(CryptoJS.enc.Hex);
+                        $('#current_file_hash').val(sha256Hex);
                     }
                 });
-                result += '</ul>';
-            }
-        });
-        $('#card').append(result);
-    };
-    fileReader.readAsText(jwtsign);
-}
+            });
+        }
 
-function validateEmail(email) {
-    var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    return re.test(String(email).toLowerCase());
-}
-</script>
+        function prepareCheckSignature() {
+            $('#loadingScreen').modal('show');
+        }
+
+        $('#loadingScreen').on('shown.bs.modal', function (event) {
+            openSignature();
+        })
+
+        function openSignature() {
+            var file = $('#signature_file').prop('files')[0];
+            var fileReader = new FileReader();
+            fileReader.readAsText(file, "UTF-8");
+            fileReader.onload = function (evt) {
+                fileReader.onerror = function (evt) {
+                    alert("error reading file");
+                    return;
+                }
+
+                $('#loadingScreen').modal('hide');
+
+                var datas = fileReader.result.split(".");
+                var public_key = atob(datas[0]);
+                var jsign = atob(datas[1]);
+                kbpgp.KeyManager.import_from_armored_pgp({
+                    armored: public_key.trim()
+                }, function (err, datasign) {
+                    if (!err) {
+                        var ring = new kbpgp.keyring.KeyRing;
+                        ring.add_key_manager(datasign);
+                        kbpgp.unbox({ keyfetch: ring, armored: jsign }, function (err, literals) {
+                            if (err != null) {
+                                return console.log("Problem: " + err);
+                            } else {
+                                console.log("decrypted message");
+                                var content = literals[0].toString();
+                                console.log(content);
+                                var json = JSON.parse(content);
+                                $('#file_name').val(json.file_name);
+                                $('#file_size').val(json.file_size);
+                                $('#file_type').val(json.file_type);
+                                $('#file_hash').val(json.file_hash);
+                                $('#signer_fingerprint').val(json.signer_fingerprint);
+                                $('#signer_name').val(json.signer_name);
+                                $('#signer_email').val(json.signer_email);
+                                $('#signer_note').html(json.signer_note);
+
+                                if ($('#file_name').val() == $('#current_file_name').val()) {
+                                    $('#file_name').addClass('is-valid');
+                                    $('#current_file_name').addClass('is-valid');
+                                }
+                                if ($('#file_size').val() != $('#current_file_size').val()) {
+                                    $('#file_size').addClass('is-invalid');
+                                    $('#current_file_size').addClass('is-invalid');
+                                } else {
+                                    $('#file_size').addClass('is-valid');
+                                    $('#current_file_size').addClass('is-valid');
+                                }
+                                if ($('#file_type').val() == $('#current_file_type').val()) {
+                                    $('#file_type').addClass('is-valid');
+                                    $('#current_file_type').addClass('is-valid');
+                                }
+                                if ($('#file_hash').val() != $('#current_file_hash').val()) {
+                                    $('#file_hash').addClass('is-invalid');
+                                    $('#current_file_hash').addClass('is-invalid');
+                                } else {
+                                    $('#file_hash').addClass('is-valid');
+                                    $('#current_file_hash').addClass('is-valid');
+                                }
+
+                                var ds = km = null;
+                                ds = literals[0].get_data_signer();
+                                if (ds) { km = ds.get_key_manager(); }
+                                if (km) {
+                                    var fp = km.get_pgp_fingerprint().toString('hex');
+                                    if ($('#signer_fingerprint').val() != fp) {
+                                        $('#signer_note').html('<span style="color:red">Fingerprint missmatch: ' + fp + '</span>');
+                                    } else {
+                                        $('#signer_fingerprint').addClass('is-valid');
+                                    }
+                                    console.log("Signed by PGP fingerprint");
+                                    console.log(fp);
+                                }
+                            }
+                        });
+                    }
+                });
+            };
+            fileReader.readAsText(jwtsign);
+        }
+
+
+    </script>
 </body>
+
 </html>
