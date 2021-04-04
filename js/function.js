@@ -1,5 +1,5 @@
 function saveTextAsFile(textToWrite, fileNameToSaveAs) {
-	var textFileAsBlob = new Blob([textToWrite], { type: "text/plain" });
+	var textFileAsBlob = new Blob([textToWrite], { type: "application/pgpsign" });
 
 	var downloadLink = document.createElement("a");
 	downloadLink.download = fileNameToSaveAs;
